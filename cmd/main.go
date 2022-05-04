@@ -35,11 +35,17 @@ func main() {
 	log, _ := zap.NewProduction()
 	defer log.Sync()
 
-	db, err := pgxpool.Connect(context.Background(), "postgresql://localhost:5432/shp")
+	connString := "postgresql://localhost:5432/shp"
+	db, err := pgxpool.Connect(context.Background(), connString)
 	if err != nil {
 		log.Panic("database connection failed", zap.Error(err))
 	}
 	defer db.Close()
+
+	log.Info("starting the server",
+		zap.String("port", ":8080"),
+		zap.String("database_conn_url", connString),
+	)
 
 	s := NewServer(db, log)
 	if err := s.ListenAndServe(); err != nil {

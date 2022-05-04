@@ -1,8 +1,6 @@
 package users
 
 import (
-	"fmt"
-
 	"github.com/jackc/pgx/v4"
 )
 
@@ -24,9 +22,7 @@ type User struct {
 // scan scans sql query result into the user.
 func (u *User) scan(r pgx.Row) error {
 	if err := r.Scan(&u.ID, &u.Email, &u.Firstname, &u.Lastname, &u.Password); err != nil {
-		fmt.Println(err)
 		return err
 	}
-
 	return nil
 }

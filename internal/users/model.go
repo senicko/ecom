@@ -24,5 +24,6 @@ func (u *User) scan(r pgx.Row) error {
 	if err := r.Scan(&u.ID, &u.Email, &u.Firstname, &u.Lastname, &u.Password); err != nil {
 		return err
 	}
+
 	return nil
 }

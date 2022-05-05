@@ -42,7 +42,7 @@ func main() {
 	}
 	defer db.Close()
 
-	log.Info("starting the server",
+	log.Info("starting",
 		zap.String("port", ":8080"),
 		zap.String("database_conn_url", connString),
 	)

@@ -19,25 +19,25 @@ func (e HttpError) Error() string {
 }
 
 // JsonResponse sends json response back to the user.
-func JsonError(rw http.ResponseWriter, status int, msg string) {
+func JsonError(w http.ResponseWriter, status int, msg string) {
 	res, _ := json.Marshal(map[string]string{
 		"message": msg,
 	})
 
-	rw.Header().Add("Content-Type", "application/json")
-	rw.WriteHeader(status)
-	rw.Write(res)
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(res)
 }
 
 // HandleError sends an error response to the client.
-func HandleError(rw http.ResponseWriter, log *zap.Logger, err error) {
+func HandleError(w http.ResponseWriter, log *zap.Logger, err error) {
 	log.Error("error occured", zap.Error(err))
 
 	var e HttpError
 	if errors.As(err, &e) {
-		JsonError(rw, e.Status, e.Msg)
+		JsonError(w, e.Status, e.Msg)
 	} else {
 		s := http.StatusInternalServerError
-		JsonError(rw, s, http.StatusText(s))
+		JsonError(w, s, http.StatusText(s))
 	}
 }

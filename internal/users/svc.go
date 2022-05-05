@@ -13,19 +13,19 @@ var (
 	ErrEmailTaken = errors.New("email is already taken")
 )
 
-type Srv interface {
+type Svc interface {
 	// SingIn sings in a user. In case email provided by the user is already being used returns an error.
 	SignIn(ctx context.Context, params *UserCreateParams) (*User, error)
 }
 
-type srv struct {
+type svc struct {
 	repo Repo
 	log  *zap.Logger
 }
 
 // NewSrv creates a new user service.
-func NewSrv(repo Repo, log *zap.Logger) *srv {
-	return &srv{
+func NewSrv(repo Repo, log *zap.Logger) *svc {
+	return &svc{
 		repo: repo,
 		log:  log,
 	}
@@ -41,7 +41,7 @@ func hashPassword(password string) (string, error) {
 	return string(h), nil
 }
 
-func (s *srv) SignIn(ctx context.Context, params *UserCreateParams) (*User, error) {
+func (s *svc) SignIn(ctx context.Context, params *UserCreateParams) (*User, error) {
 	if u, err := s.repo.FindByEmail(ctx, params.Email); err != nil {
 		return nil, err
 	} else if u != nil {

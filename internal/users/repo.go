@@ -21,7 +21,7 @@ type repo struct {
 	log *zap.Logger
 }
 
-// NewRepo creates a new user repository.
+// NewRepo creates a new users repository.
 func NewRepo(db *pgxpool.Pool, log *zap.Logger) *repo {
 	return &repo{
 		db:  db,

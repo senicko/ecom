@@ -15,7 +15,7 @@ type controller struct {
 	log *zap.Logger
 }
 
-// NewController creates a new user controller.
+// NewController creates a new users controller.
 func NewController(srv Srv, log *zap.Logger) *controller {
 	return &controller{
 		srv: srv,
@@ -23,7 +23,7 @@ func NewController(srv Srv, log *zap.Logger) *controller {
 	}
 }
 
-// SetupRoutes registers all user router routes.
+// SetupRoutes registers all users router routes.
 func (c *controller) SetupRoutes(m *chi.Mux) {
 	m.Post("/signin", c.SignIn)
 }

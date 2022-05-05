@@ -15,7 +15,7 @@ var (
 
 type Srv interface {
 	// SingIn sings in a user. In case email provided by the user is already being used returns an error.
-	SignIn(ctx context.Context, user *UserCreateParams) (*User, error)
+	SignIn(ctx context.Context, params *UserCreateParams) (*User, error)
 }
 
 type srv struct {

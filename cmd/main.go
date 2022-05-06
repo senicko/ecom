@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"net/http"
 	"shp/internal/users"
+	"shp/pkg/config"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -11,43 +14,66 @@ import (
 	"go.uber.org/zap"
 )
 
-// NewServer creates a new http server.
-func NewServer(db *pgxpool.Pool, log *zap.Logger) *http.Server {
-	userRepo := users.NewRepo(db, log)
-	userSrv := users.NewSrv(userRepo, log)
-	userController := users.NewController(userSrv, log)
+// NewLogger creates new structured logger.
+func NewLogger(cfg *config.AppConfig) (*zap.Logger, error) {
+	l, err := zap.NewProduction()
+	if err != nil {
+		return nil, err
+	}
 
+	return l, nil
+}
+
+// InitDatabase initializes pool connection with database.
+func InitDatabase(cfg *config.AppConfig) (*pgxpool.Pool, error) {
+	db, err := pgxpool.Connect(context.Background(), cfg.DatabaseURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+// NewServer creates a new http server.
+func NewServer(cfg *config.AppConfig, db *pgxpool.Pool, log *zap.Logger) *http.Server {
 	mux := chi.NewMux()
+
+	userRepo := users.NewRepo(db, log)
+	userSrv := users.NewSvc(userRepo, log)
+	userController := users.NewController(userSrv, log)
 	userController.SetupRoutes(mux)
 
-	s := &http.Server{
-		Addr:         ":8080",
+	return &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.Port),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 		IdleTimeout:  10 * time.Second,
 		Handler:      mux,
 	}
-
-	return s
 }
 
 func main() {
-	log, _ := zap.NewProduction()
-	defer log.Sync()
+	cfg := config.FromFlags()
 
-	connString := "postgresql://localhost:5432/shp"
-	db, err := pgxpool.Connect(context.Background(), connString)
+	l, err := NewLogger(cfg)
 	if err != nil {
-		log.Panic("database connection failed", zap.Error(err))
+		log.Panic("failed to create structured logger")
+	}
+	defer l.Sync()
+
+	db, err := InitDatabase(cfg)
+	if err != nil {
+		l.Error("couldn't initialize database connection")
 	}
 	defer db.Close()
 
-	log.Info("starting",
-		zap.String("port", ":8080"),
-		zap.String("database_conn_url", connString),
+	s := NewServer(cfg, db, l)
+
+	l.Info("server starting ...",
+		zap.Int("port", cfg.Port),
+		zap.String("database_url", cfg.DatabaseURL),
 	)
 
-	s := NewServer(db, log)
 	if err := s.ListenAndServe(); err != nil {
 		log.Panic("start failed", zap.Error(err))
 	}

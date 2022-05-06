@@ -5,6 +5,8 @@ go 1.18
 require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/jackc/pgx/v4 v4.16.0
+	go.uber.org/zap v1.21.0
+	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f
 )
 
 require (
@@ -18,7 +20,5 @@ require (
 	github.com/jackc/puddle v1.2.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
 	golang.org/x/text v0.3.7 // indirect
 )

@@ -17,15 +17,15 @@ type Repo interface {
 }
 
 type repo struct {
-	db  *pgxpool.Pool
-	log *zap.Logger
+	db *pgxpool.Pool
+	l  *zap.Logger
 }
 
-// NewRepo creates a new users repository.
-func NewRepo(db *pgxpool.Pool, log *zap.Logger) *repo {
+// NewRepo creates a new users' repository.
+func NewRepo(db *pgxpool.Pool, l *zap.Logger) *repo {
 	return &repo{
-		db:  db,
-		log: log,
+		db: db,
+		l:  l,
 	}
 }
 

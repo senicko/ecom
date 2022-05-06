@@ -14,20 +14,20 @@ var (
 )
 
 type Svc interface {
-	// SingIn sings in a user. In case email provided by the user is already being used returns an error.
+	// SignIn SingIn sings in a user. In case email provided by the user is already being used returns an error.
 	SignIn(ctx context.Context, params *UserCreateParams) (*User, error)
 }
 
 type svc struct {
 	repo Repo
-	log  *zap.Logger
+	l    *zap.Logger
 }
 
-// NewSrv creates a new user service.
-func NewSrv(repo Repo, log *zap.Logger) *svc {
+// NewSvc creates a new user service.
+func NewSvc(repo Repo, l *zap.Logger) *svc {
 	return &svc{
 		repo: repo,
-		log:  log,
+		l:    l,
 	}
 }
 

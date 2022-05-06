@@ -8,6 +8,10 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	ErrBadRequest = HttpError{http.StatusBadRequest, http.StatusText(http.StatusBadRequest), nil}
+)
+
 type HttpError struct {
 	Status int
 	Msg    string
@@ -34,7 +38,7 @@ func JsonError(w http.ResponseWriter, l *zap.Logger, status int, msg string) {
 
 // HandleError sends an error response to the client.
 func HandleError(w http.ResponseWriter, l *zap.Logger, err error) {
-	l.Error("error occurred", zap.Error(err))
+	l.Error(err.Error(), zap.Error(err))
 
 	var e HttpError
 	if errors.As(err, &e) {

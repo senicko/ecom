@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"shp/internal/users"
 	"shp/pkg/config"
+	"shp/users"
 	"time"
 
 	"github.com/go-chi/chi/v5"

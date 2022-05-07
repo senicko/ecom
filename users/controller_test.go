@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"shp/internal/users"
+	"shp/users"
 	"testing"
 )
 

@@ -5,24 +5,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"shp/pkg/api"
 	"shp/pkg/config"
+	"shp/pkg/logger"
 	"shp/users"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
-
-// NewLogger creates new structured logger.
-func NewLogger(cfg *config.AppConfig) (*zap.Logger, error) {
-	l, err := zap.NewProduction()
-	if err != nil {
-		return nil, err
-	}
-
-	return l, nil
-}
 
 // InitDatabase initializes pool connection with database.
 func InitDatabase(cfg *config.AppConfig) (*pgxpool.Pool, error) {
@@ -35,12 +28,17 @@ func InitDatabase(cfg *config.AppConfig) (*pgxpool.Pool, error) {
 }
 
 // NewServer creates a new http server.
-func NewServer(cfg *config.AppConfig, db *pgxpool.Pool, log *zap.Logger) *http.Server {
+func NewServer(cfg *config.AppConfig, db *pgxpool.Pool, l *zap.Logger) *http.Server {
 	mux := chi.NewMux()
 
-	userRepo := users.NewRepo(db, log)
-	userSrv := users.NewSvc(userRepo, log)
-	userController := users.NewController(userSrv, log)
+	// setup global middlewares
+	mux.Use(api.LoggerMiddleware(l))
+	mux.Use(middleware.Recoverer)
+
+	// setup controllers
+	userRepo := users.NewRepo(db, l)
+	userSrv := users.NewSvc(userRepo, l)
+	userController := users.NewController(userSrv, l)
 	userController.SetupRoutes(mux)
 
 	return &http.Server{
@@ -55,15 +53,15 @@ func NewServer(cfg *config.AppConfig, db *pgxpool.Pool, log *zap.Logger) *http.S
 func main() {
 	cfg := config.FromFlags()
 
-	l, err := NewLogger(cfg)
+	l, err := logger.New(cfg)
 	if err != nil {
-		log.Panic("failed to create structured logger")
+		log.Fatalf("can't initialize zap logger: %v", err)
 	}
 	defer l.Sync()
 
 	db, err := InitDatabase(cfg)
 	if err != nil {
-		l.Error("couldn't initialize database connection")
+		l.Error("can't initialize database connection")
 	}
 	defer db.Close()
 

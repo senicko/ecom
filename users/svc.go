@@ -41,7 +41,7 @@ func hashPassword(password string) (string, error) {
 	return string(h), nil
 }
 
-func (s *svc) SignIn(ctx context.Context, params *UserCreateParams) (*User, error) {
+func (s svc) SignIn(ctx context.Context, params *UserCreateParams) (*User, error) {
 	if u, err := s.repo.FindByEmail(ctx, params.Email); err != nil {
 		return nil, err
 	} else if u != nil {

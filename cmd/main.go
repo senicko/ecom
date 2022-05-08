@@ -57,7 +57,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
-	defer l.Sync()
+
+	defer func(l *zap.Logger) {
+		err := l.Sync()
+		if err != nil {
+			l.Error("can't sync the logger", zap.Error(err))
+		}
+	}(l)
 
 	db, err := InitDatabase(cfg)
 	if err != nil {
@@ -73,6 +79,6 @@ func main() {
 	)
 
 	if err := s.ListenAndServe(); err != nil {
-		log.Panic("start failed", zap.Error(err))
+		l.Panic("start failed", zap.Error(err))
 	}
 }

@@ -29,11 +29,11 @@ func NewController(l *zap.Logger, userService Service, authService auth.Service)
 
 // SetupRoutes registers all users' router routes.
 func (c *userController) SetupRoutes(m *chi.Mux) {
-	m.Post("/signin", c.SignIn)
+	m.Post("/signup", c.SignUp)
 }
 
 // SignIn is a http controller that creates a new account.
-func (c *userController) SignIn(w http.ResponseWriter, r *http.Request) {
+func (c *userController) SignUp(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var params *models.UserCreateParams
 

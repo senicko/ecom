@@ -1,33 +1,33 @@
-package users
+package user
 
 import (
 	"context"
 	"errors"
 	"fmt"
-
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"shp/pkg/models"
 )
 
 var (
 	ErrEmailTaken = errors.New("email is already taken")
 )
 
-type Svc interface {
+type Service interface {
 	// SignIn SingIn sings in a user. In case email provided by the user is already being used returns an error.
-	SignIn(ctx context.Context, params *UserCreateParams) (*User, error)
+	SignIn(ctx context.Context, params *models.UserCreateParams) (*models.User, error)
 }
 
-type svc struct {
-	repo Repo
-	l    *zap.Logger
+type service struct {
+	userRepo Repo
+	l        *zap.Logger
 }
 
-// NewSvc creates a new user service.
-func NewSvc(repo Repo, l *zap.Logger) *svc {
-	return &svc{
-		repo: repo,
-		l:    l,
+// NewService creates a new user service.
+func NewService(userRepo Repo, l *zap.Logger) *service {
+	return &service{
+		userRepo: userRepo,
+		l:        l,
 	}
 }
 
@@ -41,8 +41,8 @@ func hashPassword(password string) (string, error) {
 	return string(h), nil
 }
 
-func (s svc) SignIn(ctx context.Context, params *UserCreateParams) (*User, error) {
-	if u, err := s.repo.FindByEmail(ctx, params.Email); err != nil {
+func (s service) SignIn(ctx context.Context, params *models.UserCreateParams) (*models.User, error) {
+	if u, err := s.userRepo.FindByEmail(ctx, params.Email); err != nil {
 		return nil, err
 	} else if u != nil {
 		return nil, ErrEmailTaken
@@ -54,7 +54,7 @@ func (s svc) SignIn(ctx context.Context, params *UserCreateParams) (*User, error
 	}
 	params.Password = h
 
-	u, err := s.repo.Create(ctx, params)
+	u, err := s.userRepo.Create(ctx, params)
 	if err != nil {
 		return nil, err
 	}

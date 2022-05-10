@@ -1,4 +1,4 @@
-package users
+package models
 
 import (
 	"github.com/jackc/pgx/v4"
@@ -19,8 +19,8 @@ type User struct {
 	Password  []byte `json:"-"`
 }
 
-// scan sql query result into the user.
-func (u *User) scan(r pgx.Row) error {
+// Scan scans sql query result into the user.
+func (u *User) Scan(r pgx.Row) error {
 	if err := r.Scan(&u.ID, &u.Email, &u.Firstname, &u.Lastname, &u.Password); err != nil {
 		return err
 	}

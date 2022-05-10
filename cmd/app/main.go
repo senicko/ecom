@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"shp/pkg/api"
+	"shp/pkg/auth"
 	"shp/pkg/config"
-	"shp/pkg/logger"
-	"shp/users"
+	"shp/pkg/middlewares"
+	"shp/pkg/user"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -16,6 +16,16 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )
+
+// NewLogger creates new structured logger.
+func NewLogger(cfg *config.AppConfig) (*zap.Logger, error) {
+	l, err := zap.NewProduction()
+	if err != nil {
+		return nil, err
+	}
+
+	return l, nil
+}
 
 // InitDatabase initializes pool connection with database.
 func InitDatabase(cfg *config.AppConfig) (*pgxpool.Pool, error) {
@@ -28,17 +38,19 @@ func InitDatabase(cfg *config.AppConfig) (*pgxpool.Pool, error) {
 }
 
 // NewServer creates a new http server.
-func NewServer(cfg *config.AppConfig, db *pgxpool.Pool, l *zap.Logger) *http.Server {
+func NewServer(cfg *config.AppConfig, db *pgxpool.Pool, l *zap.Logger) (*http.Server, error) {
 	mux := chi.NewMux()
 
 	// setup global middlewares
-	mux.Use(api.LoggerMiddleware(l))
+	mux.Use(middlewares.LoggerMiddleware(l))
 	mux.Use(middleware.Recoverer)
 
+	authService := auth.NewService(l)
+
 	// setup controllers
-	userRepo := users.NewRepo(db, l)
-	userSrv := users.NewSvc(userRepo, l)
-	userController := users.NewController(userSrv, l)
+	userRepo := user.NewRepo(db, l)
+	userService := user.NewService(userRepo, l)
+	userController := user.NewController(l, userService, authService)
 	userController.SetupRoutes(mux)
 
 	return &http.Server{
@@ -47,13 +59,13 @@ func NewServer(cfg *config.AppConfig, db *pgxpool.Pool, l *zap.Logger) *http.Ser
 		WriteTimeout: 5 * time.Second,
 		IdleTimeout:  10 * time.Second,
 		Handler:      mux,
-	}
+	}, nil
 }
 
 func main() {
 	cfg := config.FromFlags()
 
-	l, err := logger.New(cfg)
+	l, err := NewLogger(cfg)
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
@@ -71,7 +83,10 @@ func main() {
 	}
 	defer db.Close()
 
-	s := NewServer(cfg, db, l)
+	s, err := NewServer(cfg, db, l)
+	if err != nil {
+		l.Fatal("can't create a server", zap.Error(err))
+	}
 
 	l.Info("server starting ...",
 		zap.Int("port", cfg.Port),
@@ -79,6 +94,6 @@ func main() {
 	)
 
 	if err := s.ListenAndServe(); err != nil {
-		l.Panic("start failed", zap.Error(err))
+		l.Fatal("start failed", zap.Error(err))
 	}
 }

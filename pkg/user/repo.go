@@ -1,7 +1,8 @@
-package users
+package user
 
 import (
 	"context"
+	"shp/pkg/models"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -10,10 +11,9 @@ import (
 
 type Repo interface {
 	// FindByEmail finds a user with the specified email.
-	FindByEmail(ctx context.Context, e string) (*User, error)
-
+	FindByEmail(ctx context.Context, e string) (*models.User, error)
 	// Create inserts a new user to the database.
-	Create(ctx context.Context, p *UserCreateParams) (*User, error)
+	Create(ctx context.Context, p *models.UserCreateParams) (*models.User, error)
 }
 
 type repo struct {
@@ -29,12 +29,12 @@ func NewRepo(db *pgxpool.Pool, l *zap.Logger) *repo {
 	}
 }
 
-func (r repo) FindByEmail(ctx context.Context, e string) (*User, error) {
+func (r repo) FindByEmail(ctx context.Context, e string) (*models.User, error) {
 	q := "SELECT * FROM users WHERE email = $1"
 	row := r.db.QueryRow(ctx, q, e)
 
-	var u User
-	if err := u.scan(row); err != nil {
+	var u models.User
+	if err := u.Scan(row); err != nil {
 		switch err {
 		case pgx.ErrNoRows:
 			return nil, nil
@@ -46,12 +46,12 @@ func (r repo) FindByEmail(ctx context.Context, e string) (*User, error) {
 	return &u, nil
 }
 
-func (r repo) Create(ctx context.Context, p *UserCreateParams) (*User, error) {
+func (r repo) Create(ctx context.Context, p *models.UserCreateParams) (*models.User, error) {
 	q := "INSERT INTO users (email, firstname, lastname, password) VALUES ($1, $2, $3, $4) RETURNING *"
 	row := r.db.QueryRow(ctx, q, p.Email, p.Firstname, p.Lastname, p.Password)
 
-	var u User
-	if err := u.scan(row); err != nil {
+	var u models.User
+	if err := u.Scan(row); err != nil {
 		return nil, err
 	}
 

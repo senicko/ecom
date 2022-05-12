@@ -59,16 +59,15 @@ func (c *userController) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload, err := json.Marshal(map[string]string{
-		"atk": string(atk),
-		"rtk": string(rtk),
-	})
+	api.AddCookie(w, "atk", atk)
+	api.AddCookie(w, "rtk", rtk)
+
+	res, err := json.Marshal(user)
 	if err != nil {
 		api.HandleError(w, c.l, err)
-		return
 	}
 
-	if err := api.JsonResponse(w, http.StatusOK, payload); err != nil {
+	if err := api.JsonResponse(w, http.StatusOK, res); err != nil {
 		c.l.Error("can't respond", zap.Error(err))
 	}
 }

@@ -2,7 +2,6 @@ package user
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"shp/pkg/api"
 	"shp/pkg/auth"
@@ -32,7 +31,7 @@ func (c *userController) SetupRoutes(m *chi.Mux) {
 	m.Post("/signup", c.SignUp)
 }
 
-// SignIn is a http controller that creates a new account.
+// SignUp is a http controller that creates a new account.
 func (c *userController) SignUp(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var params *models.UserCreateParams
@@ -43,14 +42,7 @@ func (c *userController) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := c.userService.SignIn(ctx, params)
-	if errors.Is(err, ErrEmailTaken) {
-		api.HandleError(w, c.l, api.HttpError{
-			Status: http.StatusBadRequest,
-			Msg:    "Email adress is already taken",
-			Err:    err,
-		})
-		return
-	} else if err != nil {
+	if err != nil {
 		api.HandleError(w, c.l, err)
 		return
 	}
@@ -67,20 +59,16 @@ func (c *userController) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := json.Marshal(map[string]string{
+	payload, err := json.Marshal(map[string]string{
 		"atk": string(atk),
 		"rtk": string(rtk),
 	})
-
 	if err != nil {
 		api.HandleError(w, c.l, err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	_, err = w.Write(res)
-	if err != nil {
-		c.l.Info("can't respond", zap.Error(err))
+	if err := api.JsonResponse(w, http.StatusOK, payload); err != nil {
+		c.l.Error("can't respond", zap.Error(err))
 	}
 }

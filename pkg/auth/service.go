@@ -33,15 +33,7 @@ func NewService(l *zap.Logger) *authService {
 	}
 }
 
-// TODO: Refactor NewAccessToken and NewRefreshToken to reduce code repetition
-
-func (s authService) NewAccessToken(user *models.User) (string, error) {
-	claims := &jwt.StandardClaims{
-		ExpiresAt: time.Now().AddDate(0, 0, 1).Unix(),
-		Subject:   strconv.Itoa(user.ID),
-		Issuer:    "localhost",
-	}
-
+func (s authService) signToken(claims jwt.StandardClaims, secret []byte) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	signed, err := token.SignedString(s.accessKey)
@@ -52,19 +44,22 @@ func (s authService) NewAccessToken(user *models.User) (string, error) {
 	return signed, nil
 }
 
+func (s authService) NewAccessToken(user *models.User) (string, error) {
+	claims := jwt.StandardClaims{
+		ExpiresAt: time.Now().AddDate(0, 0, 1).Unix(),
+		Subject:   strconv.Itoa(user.ID),
+		Issuer:    "localhost",
+	}
+
+	return s.signToken(claims, s.accessKey)
+}
+
 func (s authService) NewRefreshToken(user *models.User) (string, error) {
-	claims := &jwt.StandardClaims{
+	claims := jwt.StandardClaims{
 		ExpiresAt: time.Now().AddDate(0, 1, 0).Unix(),
 		Subject:   strconv.Itoa(user.ID),
 		Issuer:    "localhost",
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	signed, err := token.SignedString(s.accessKey)
-	if err != nil {
-		return "", fmt.Errorf("can't sign the token: %w", err)
-	}
-
-	return signed, nil
+	return s.signToken(claims, s.accessKey)
 }

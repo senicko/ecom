@@ -71,8 +71,7 @@ func main() {
 	}
 
 	defer func(l *zap.Logger) {
-		err := l.Sync()
-		if err != nil {
+		if err := l.Sync(); err != nil {
 			l.Error("can't sync the logger", zap.Error(err))
 		}
 	}(l)

@@ -8,10 +8,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	ErrBadRequest = HttpError{http.StatusBadRequest, http.StatusText(http.StatusBadRequest), nil}
-)
-
 type HttpError struct {
 	Status int
 	Msg    string
@@ -19,6 +15,9 @@ type HttpError struct {
 }
 
 func (e HttpError) Error() string {
+	if e.Err == nil {
+		return e.Msg
+	}
 	return e.Err.Error()
 }
 

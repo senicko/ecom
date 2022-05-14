@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
-	"net/http"
-	"shp/pkg/api"
 	"shp/pkg/models"
 )
 
 var (
-	ErrEmailTaken = errors.New("")
+	ErrEmailTaken = errors.New("email is already taken")
 )
 
 type Service interface {
@@ -47,7 +45,7 @@ func (s service) SignIn(ctx context.Context, params *models.UserCreateParams) (*
 	if u, err := s.userRepo.FindByEmail(ctx, params.Email); err != nil {
 		return nil, err
 	} else if u != nil {
-		return nil, api.HttpError{Status: http.StatusBadRequest, Msg: "email is already taken", Err: err}
+		return nil, ErrEmailTaken
 	}
 
 	h, err := hashPassword(params.Password)

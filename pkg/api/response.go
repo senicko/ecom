@@ -19,6 +19,7 @@ func JsonResponse(w http.ResponseWriter, status int, payload []byte) error {
 
 // AddCookie adds a new HTTP only cookie to request.
 func AddCookie(w http.ResponseWriter, name, value string) {
+	// TODO: Set expire date
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
 		Value:    value,

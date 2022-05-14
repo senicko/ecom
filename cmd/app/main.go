@@ -41,13 +41,11 @@ func InitDatabase(cfg *config.AppConfig) (*pgxpool.Pool, error) {
 func NewServer(cfg *config.AppConfig, db *pgxpool.Pool, l *zap.Logger) (*http.Server, error) {
 	mux := chi.NewMux()
 
-	// setup global middlewares
 	mux.Use(middlewares.LoggerMiddleware(l))
 	mux.Use(middleware.Recoverer)
 
 	authService := auth.NewService(l)
 
-	// setup controllers
 	userRepo := user.NewRepo(db, l)
 	userService := user.NewService(userRepo, l)
 	userController := user.NewController(l, userService, authService)
